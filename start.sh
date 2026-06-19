@@ -1,8 +1,7 @@
 #!/bin/bash
-# start.sh — Tracklytics startup script
-# Activates the virtual environment and launches the app.
-# This is called by the LaunchAgent on Mac login.
+# Tracklytics — start locally
+# Access at: http://localhost:8000  or  http://<your-mac-ip>:8000 (WiFi)
 
-cd /Users/bharathsicerona/Claude/Projects/Tracklytics
+cd "$(dirname "$0")"
 source venv/bin/activate
-exec uvicorn app.main:app --host 127.0.0.1 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000

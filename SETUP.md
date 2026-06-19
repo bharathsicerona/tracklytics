@@ -62,13 +62,17 @@ Share your Mac's local IP — e.g. **http://192.168.1.10:8000**
 
 ---
 
-Every time you want to run the app:
+Every time you want to run the app, use the startup scripts instead of typing the full command:
 
 ```bash
-cd ~/Claude/Projects/Tracklytics
-source venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0
+# Local access only (you + same WiFi)
+bash ~/Claude/Projects/Tracklytics/start.sh
+
+# With public tunnel (friends anywhere)
+bash ~/Claude/Projects/Tracklytics/start_public.sh
 ```
+
+`start_public.sh` starts both the app and the Cloudflare tunnel in one go. Press Ctrl+C to stop both.
 
 ---
 
