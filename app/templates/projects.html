@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Projects – Tracklytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🚀 Projects</h1>
+</div>
+
+<!-- ── ACTIVE PROJECTS ───────────────────────────────── -->
+{% if projects %}
+<section class="card">
+  <h2>Active Projects</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Project</th><th>This Week</th><th>Total</th><th>Sessions</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for p in projects %}
+      <tr>
+        <td>
+          <strong>{{ p.name }}</strong>
+          {% if p.description %}<br><small>{{ p.description }}</small>{% endif %}
+        </td>
+        <td>{{ p.minutes_this_week }} min</td>
+        <td>{{ p.minutes_total }} min{% if p.minutes_total >= 60 %} ({{ (p.minutes_total / 60) | round(1) }}h){% endif %}</td>
+        <td>{{ p.session_count }}</td>
+        <td>
+          <form method="post" action="/projects/complete/{{ p.id }}" style="display:inline">
+            <button class="btn-small btn-success" onclick="return confirm('Mark \'{{ p.name }}\' as completed?')">✓ Done</button>
+          </form>
+          <form method="post" action="/projects/delete/{{ p.id }}" style="display:inline">
+            <button class="btn-delete" onclick="return confirm('Delete \'{{ p.name }}\' and all sessions?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% else %}
+<section class="card">
+  <p class="empty">No active projects. Add one below ↓</p>
+</section>
+{% endif %}
+
+<!-- ── ADD PROJECT ────────────────────────────────────── -->
+<section class="card">
+  <h2>Add a Project</h2>
+  <form method="post" action="/projects/add" class="log-form">
+    <div class="form-row">
+      <label>Project name</label>
+      <input type="text" name="name" placeholder="e.g. Tracklytics, Gold Trading EA" required />
+    </div>
+    <div class="form-row">
+      <label>Description (optional)</label>
+      <input type="text" name="description" placeholder="What is this project about?" />
+    </div>
+    <button type="submit" class="btn">Add Project</button>
+  </form>
+</section>
+
+<!-- ── LOG A SESSION ─────────────────────────────────── -->
+{% if projects %}
+<section class="card">
+  <h2>Log a Work Session</h2>
+  <form method="post" action="/projects/log" class="log-form">
+    <div class="form-row">
+      <label>Project</label>
+      <select name="project_id" required>
+        {% for p in projects %}
+        <option value="{{ p.id }}">{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Date</label>
+      <input type="date" name="session_date" value="{{ today }}" required />
+    </div>
+    <div class="form-row">
+      <label>Duration (minutes)</label>
+      <input type="number" name="duration_minutes" min="1" max="480" placeholder="e.g. 90" required />
+    </div>
+    <div class="form-row">
+      <label>Milestone / What you built</label>
+      <input type="text" name="milestone" placeholder="e.g. Finished habits page, Fixed EA entry logic" />
+    </div>
+    <div class="form-row">
+      <label>Notes (optional)</label>
+      <textarea name="notes" rows="2" placeholder="Blockers, next steps, etc."></textarea>
+    </div>
+    <button type="submit" class="btn">Save Session</button>
+  </form>
+</section>
+{% endif %}
+
+<!-- ── RECENT SESSIONS ───────────────────────────────── -->
+{% if recent_sessions %}
+<section class="card">
+  <h2>Recent Sessions</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Date</th><th>Project</th><th>Duration</th><th>Milestone</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in recent_sessions %}
+      <tr>
+        <td>{{ s.session_date }}</td>
+        <td>{{ s.project_name }}</td>
+        <td>{{ s.duration_minutes }} min</td>
+        <td>{{ s.milestone or "—" }}</td>
+        <td>
+          <form method="post" action="/projects/session/delete/{{ s.id }}">
+            <button class="btn-delete" onclick="return confirm('Delete this session?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<!-- ── COMPLETED PROJECTS ────────────────────────────── -->
+{% if completed_projects %}
+<section class="card">
+  <h2>✅ Completed Projects</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Project</th><th>Total time</th><th>Sessions</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for p in completed_projects %}
+      <tr>
+        <td><strong>{{ p.name }}</strong><br><small>{{ p.description or "" }}</small></td>
+        <td>{{ p.minutes_total }} min{% if p.minutes_total >= 60 %} ({{ (p.minutes_total / 60) | round(1) }}h){% endif %}</td>
+        <td>{{ p.session_count }}</td>
+        <td>
+          <form method="post" action="/projects/reactivate/{{ p.id }}" style="display:inline">
+            <button class="btn-small">Reactivate</button>
+          </form>
+          <form method="post" action="/projects/delete/{{ p.id }}" style="display:inline">
+            <button class="btn-delete" onclick="return confirm('Delete permanently?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+{% endblock %}

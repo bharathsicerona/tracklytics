@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Learning – Tracklytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📚 Learning Goals</h1>
+</div>
+
+<!-- ── ACTIVE GOALS ───────────────────────────────────── -->
+{% if goals %}
+<section class="card">
+  <h2>Active Goals</h2>
+  {% for g in goals %}
+  {% set pct = [((g.minutes_this_week / g.target_minutes_per_week) * 100) | int, 100] | min %}
+  <div class="goal-row">
+    <div class="goal-info">
+      <strong>{{ g.name }}</strong>
+      {% if g.description %}<small>{{ g.description }}</small>{% endif %}
+    </div>
+    <div class="goal-stats">
+      <span>{{ g.minutes_this_week }} / {{ g.target_minutes_per_week }} min this week</span>
+      <div class="bar-wrap wide">
+        <div class="bar {% if pct >= 100 %}bar-green{% endif %}" style="width: {{ pct }}%"></div>
+      </div>
+      <small>All time: {{ g.minutes_total }} min across {{ g.session_count }} sessions</small>
+    </div>
+    <div class="goal-actions">
+      <form method="post" action="/learning/complete/{{ g.id }}">
+        <button class="btn-small btn-success" onclick="return confirm('Mark \'{{ g.name }}\' as completed?')">✓ Done</button>
+      </form>
+      <form method="post" action="/learning/delete/{{ g.id }}">
+        <button class="btn-delete" onclick="return confirm('Delete \'{{ g.name }}\' and all sessions?')">🗑</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% else %}
+<section class="card">
+  <p class="empty">No active learning goals. Add one below ↓</p>
+</section>
+{% endif %}
+
+<!-- ── ADD GOAL ───────────────────────────────────────── -->
+<section class="card">
+  <h2>Add a Learning Goal</h2>
+  <form method="post" action="/learning/add" class="log-form">
+    <div class="form-row">
+      <label>Goal name</label>
+      <input type="text" name="name" placeholder="e.g. Python, SQL, AI Tools, Spanish" required />
+    </div>
+    <div class="form-row">
+      <label>Description (optional)</label>
+      <input type="text" name="description" placeholder="What specifically are you learning?" />
+    </div>
+    <div class="form-row">
+      <label>Weekly target (minutes)</label>
+      <input type="number" name="target_minutes_per_week" value="60" min="15" max="1200" />
+    </div>
+    <button type="submit" class="btn">Add Goal</button>
+  </form>
+</section>
+
+<!-- ── LOG A SESSION ─────────────────────────────────── -->
+{% if goals %}
+<section class="card">
+  <h2>Log a Session</h2>
+  <form method="post" action="/learning/log" class="log-form">
+    <div class="form-row">
+      <label>Goal</label>
+      <select name="goal_id" required>
+        {% for g in goals %}
+        <option value="{{ g.id }}">{{ g.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Date</label>
+      <input type="date" name="session_date" value="{{ today }}" required />
+    </div>
+    <div class="form-row">
+      <label>Duration (minutes)</label>
+      <input type="number" name="duration_minutes" min="1" max="480" placeholder="e.g. 45" required />
+    </div>
+    <div class="form-row">
+      <label>Topic covered</label>
+      <input type="text" name="topic" placeholder="e.g. FastAPI routing, Pandas groupby" />
+    </div>
+    <div class="form-row">
+      <label>Notes (optional)</label>
+      <textarea name="notes" rows="2" placeholder="Key takeaways, links, etc."></textarea>
+    </div>
+    <button type="submit" class="btn">Save Session</button>
+  </form>
+</section>
+{% endif %}
+
+<!-- ── RECENT SESSIONS ───────────────────────────────── -->
+{% if recent_sessions %}
+<section class="card">
+  <h2>Recent Sessions</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Date</th><th>Goal</th><th>Duration</th><th>Topic</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in recent_sessions %}
+      <tr>
+        <td>{{ s.session_date }}</td>
+        <td>{{ s.goal_name }}</td>
+        <td>{{ s.duration_minutes }} min</td>
+        <td>{{ s.topic or "—" }}</td>
+        <td>
+          <form method="post" action="/learning/session/delete/{{ s.id }}">
+            <button class="btn-delete" onclick="return confirm('Delete this session?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<!-- ── COMPLETED GOALS ───────────────────────────────── -->
+{% if completed_goals %}
+<section class="card">
+  <h2>✅ Completed Goals</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Goal</th><th>Total time</th><th>Sessions</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for g in completed_goals %}
+      <tr>
+        <td><strong>{{ g.name }}</strong><br><small>{{ g.description or "" }}</small></td>
+        <td>{{ g.minutes_total }} min{% if g.minutes_total >= 60 %} ({{ (g.minutes_total / 60) | round(1) }}h){% endif %}</td>
+        <td>{{ g.session_count }}</td>
+        <td>
+          <form method="post" action="/learning/reactivate/{{ g.id }}" style="display:inline">
+            <button class="btn-small">Reactivate</button>
+          </form>
+          <form method="post" action="/learning/delete/{{ g.id }}" style="display:inline">
+            <button class="btn-delete" onclick="return confirm('Delete permanently?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+{% endblock %}

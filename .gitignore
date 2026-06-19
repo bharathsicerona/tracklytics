@@ -1,0 +1,20 @@
+# Environment variables — contains passwords, never commit this
+.env
+
+# Database — local data, not for version control
+tracklytics.db
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

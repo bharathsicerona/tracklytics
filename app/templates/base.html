@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Tracklytics{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">📊 Tracklytics</a>
+    <!-- Hamburger button — visible only on mobile -->
+    <button class="nav-toggle" onclick="document.querySelector('.nav-menu').classList.toggle('open')" aria-label="Menu">☰</button>
+    <div class="nav-menu">
+      <div class="nav-links">
+        <a href="/">Dashboard</a>
+        <a href="/habits">Habits</a>
+        <a href="/learning">Learning</a>
+        <a href="/projects">Projects</a>
+        <a href="/history">History</a>
+        {% if user and user.is_admin %}
+        <a href="/admin">Admin</a>
+        {% endif %}
+      </div>
+      <div class="nav-user">
+        {% if user %}
+        <span class="nav-name">{{ user.name }}</span>
+        <a href="/logout" class="nav-logout">Sign out</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

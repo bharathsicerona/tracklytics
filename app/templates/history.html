@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}History – Tracklytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📅 History</h1>
+</div>
+
+<!-- ── DATE PICKER ───────────────────────────────────────── -->
+<section class="card">
+  <form method="get" action="/history" class="date-nav">
+    <label><strong>View date:</strong></label>
+    <input type="date" name="date" value="{{ selected_date }}"
+           max="{{ selected_date }}"
+           onchange="this.form.submit()" />
+  </form>
+  <p class="date-label" style="margin-top:0.5rem">
+    Showing: <strong>{{ selected_date }}</strong>
+  </p>
+</section>
+
+<!-- ── HABITS ────────────────────────────────────────────── -->
+<section class="card">
+  <h2>Habits</h2>
+  {% if habits %}
+  <div class="habit-grid">
+    {% for h in habits %}
+    {% if selected_date >= h.start_date %}
+    <form method="post" action="/history/toggle" class="habit-tile {% if h.completed %}done{% endif %}">
+      <input type="hidden" name="habit_id"      value="{{ h.id }}" />
+      <input type="hidden" name="log_date"       value="{{ selected_date }}" />
+      <input type="hidden" name="redirect_date"  value="{{ selected_date }}" />
+      <button type="submit" class="habit-btn">
+        <span class="habit-icon">{{ h.icon }}</span>
+        <span class="habit-name">{{ h.name }}</span>
+        <span class="habit-check">{% if h.completed %}✅{% else %}⬜{% endif %}</span>
+      </button>
+    </form>
+    {% else %}
+    <div class="habit-tile">
+      <div class="habit-btn" style="opacity:0.4;cursor:default">
+        <span class="habit-icon">{{ h.icon }}</span>
+        <span class="habit-name">{{ h.name }}</span>
+        <span class="habit-check na">–</span>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No habits tracked yet.</p>
+  {% endif %}
+</section>
+
+<!-- ── LEARNING SESSIONS ──────────────────────────────────── -->
+<section class="card">
+  <h2>📚 Learning Sessions</h2>
+  {% if learning_sessions %}
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Goal</th><th>Duration</th><th>Topic</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in learning_sessions %}
+      <tr>
+        <td>{{ s.goal_name }}</td>
+        <td>{{ s.duration_minutes }} min</td>
+        <td>{{ s.topic or "—" }}</td>
+        <td>
+          <button class="btn-small" onclick="toggleEdit('ls-{{ s.id }}')">Edit</button>
+          <form method="post" action="/learning/session/delete/{{ s.id }}" style="display:inline">
+            <button class="btn-delete" onclick="return confirm('Delete this session?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      <!-- Inline edit row -->
+      <tr id="ls-{{ s.id }}" style="display:none">
+        <td colspan="4">
+          <form method="post" action="/learning/session/edit/{{ s.id }}" class="inline-edit">
+            <input type="date"   name="session_date"     value="{{ s.session_date }}" required />
+            <input type="number" name="duration_minutes" value="{{ s.duration_minutes }}" min="1" max="480" required />
+            <input type="text"   name="topic"            value="{{ s.topic or '' }}" placeholder="Topic" />
+            <input type="text"   name="notes"            value="{{ s.notes or '' }}" placeholder="Notes" />
+            <button type="submit" class="btn-small">Save</button>
+            <button type="button" class="btn-small btn-warn" onclick="toggleEdit('ls-{{ s.id }}')">Cancel</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="empty">No learning sessions on this date.</p>
+  {% endif %}
+
+  {% if goals %}
+  <details style="margin-top:1rem">
+    <summary class="btn-link" style="cursor:pointer">+ Add a learning session for this date</summary>
+    <form method="post" action="/learning/log" class="log-form" style="margin-top:0.75rem">
+      <input type="hidden" name="session_date" value="{{ selected_date }}" />
+      <div class="form-row">
+        <label>Goal</label>
+        <select name="goal_id" required>
+          {% for g in goals %}<option value="{{ g.id }}">{{ g.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Duration (minutes)</label>
+        <input type="number" name="duration_minutes" min="1" max="480" required />
+      </div>
+      <div class="form-row">
+        <label>Topic</label>
+        <input type="text" name="topic" placeholder="What did you study?" />
+      </div>
+      <button type="submit" class="btn">Add Session</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+
+<!-- ── PROJECT SESSIONS ──────────────────────────────────── -->
+<section class="card">
+  <h2>🚀 Project Sessions</h2>
+  {% if project_sessions %}
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Project</th><th>Duration</th><th>Milestone</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in project_sessions %}
+      <tr>
+        <td>{{ s.project_name }}</td>
+        <td>{{ s.duration_minutes }} min</td>
+        <td>{{ s.milestone or "—" }}</td>
+        <td>
+          <button class="btn-small" onclick="toggleEdit('ps-{{ s.id }}')">Edit</button>
+          <form method="post" action="/projects/session/delete/{{ s.id }}" style="display:inline">
+            <button class="btn-delete" onclick="return confirm('Delete this session?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      <!-- Inline edit row -->
+      <tr id="ps-{{ s.id }}" style="display:none">
+        <td colspan="4">
+          <form method="post" action="/projects/session/edit/{{ s.id }}" class="inline-edit">
+            <input type="date"   name="session_date"     value="{{ s.session_date }}" required />
+            <input type="number" name="duration_minutes" value="{{ s.duration_minutes }}" min="1" max="480" required />
+            <input type="text"   name="milestone"        value="{{ s.milestone or '' }}" placeholder="Milestone" />
+            <input type="text"   name="notes"            value="{{ s.notes or '' }}" placeholder="Notes" />
+            <button type="submit" class="btn-small">Save</button>
+            <button type="button" class="btn-small btn-warn" onclick="toggleEdit('ps-{{ s.id }}')">Cancel</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="empty">No project sessions on this date.</p>
+  {% endif %}
+
+  {% if projects %}
+  <details style="margin-top:1rem">
+    <summary class="btn-link" style="cursor:pointer">+ Add a project session for this date</summary>
+    <form method="post" action="/projects/log" class="log-form" style="margin-top:0.75rem">
+      <input type="hidden" name="session_date" value="{{ selected_date }}" />
+      <div class="form-row">
+        <label>Project</label>
+        <select name="project_id" required>
+          {% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Duration (minutes)</label>
+        <input type="number" name="duration_minutes" min="1" max="480" required />
+      </div>
+      <div class="form-row">
+        <label>Milestone</label>
+        <input type="text" name="milestone" placeholder="What did you build?" />
+      </div>
+      <button type="submit" class="btn">Add Session</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+
+<script>
+function toggleEdit(id) {
+  const row = document.getElementById(id);
+  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+</script>
+{% endblock %}

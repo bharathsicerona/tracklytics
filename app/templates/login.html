@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – Tracklytics</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="auth-body">
+  <div class="auth-card">
+    <div class="auth-logo">📊</div>
+    <h1 class="auth-title">Tracklytics</h1>
+    <p class="auth-subtitle">Track your habits, goals, and projects.</p>
+
+    {% if error %}
+    <div class="auth-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/login" class="auth-form">
+      <div class="form-row">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@example.com" required autofocus />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-full">Sign In</button>
+    </form>
+  </div>
+</body>
+</html>

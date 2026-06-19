@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Tracklytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Good day, {{ user.name.split()[0] }} 👋</h1>
+  <p class="date-label">{{ today }}</p>
+</div>
+
+<!-- ── TODAY'S HABITS ────────────────────────────────── -->
+<section class="card">
+  <h2>Today's Habits</h2>
+  <div class="habit-grid">
+    {% for h in today_habits %}
+    <form method="post" action="/habits/toggle" class="habit-tile {% if h.completed %}done{% endif %}">
+      <input type="hidden" name="habit_id" value="{{ h.id }}" />
+      <input type="hidden" name="log_date"  value="{{ today_date }}" />
+      <button type="submit" class="habit-btn">
+        <span class="habit-icon">{{ h.icon }}</span>
+        <span class="habit-name">{{ h.name }}</span>
+        <span class="habit-check">{% if h.completed %}✅{% else %}⬜{% endif %}</span>
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ── HABIT STATS (last 7 days) ─────────────────────── -->
+<section class="card">
+  <h2>Habits – Last 7 Days</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Habit</th><th>Completed</th><th>Rate</th></tr>
+    </thead>
+    <tbody>
+      {% for s in habit_stats %}
+      <tr>
+        <td>{{ s.name }}</td>
+        <td>{{ s.completed_days }} / 7</td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width: {{ (s.completed_days / 7 * 100) | int }}%"></div>
+          </div>
+          {{ (s.completed_days / 7 * 100) | int }}%
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── LEARNING THIS WEEK ─────────────────────────────── -->
+<section class="card">
+  <h2>Learning – This Week</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Goal</th><th>Minutes</th><th>Target</th><th>Progress</th></tr>
+    </thead>
+    <tbody>
+      {% for l in learning_stats %}
+      {% set pct = [((l.minutes_this_week / l.target_minutes_per_week) * 100) | int, 100] | min %}
+      <tr>
+        <td>{{ l.name }}</td>
+        <td>{{ l.minutes_this_week }} min</td>
+        <td>{{ l.target_minutes_per_week }} min</td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar {% if pct >= 100 %}bar-green{% endif %}" style="width: {{ pct }}%"></div>
+          </div>
+          {{ pct }}%
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  <a href="/learning" class="btn-link">Log a session →</a>
+</section>
+
+<!-- ── PROJECTS THIS WEEK ─────────────────────────────── -->
+<section class="card">
+  <h2>Projects – This Week</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Project</th><th>Time This Week</th></tr>
+    </thead>
+    <tbody>
+      {% for p in project_stats %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.minutes_this_week }} min{% if p.minutes_this_week >= 60 %} ({{ (p.minutes_this_week / 60) | round(1) }}h){% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  <a href="/projects" class="btn-link">Log a session →</a>
+</section>
+{% endblock %}

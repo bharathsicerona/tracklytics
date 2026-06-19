@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Habits – Tracklytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🏃 Habits</h1>
+</div>
+
+<!-- ── TODAY'S CHECK-IN ──────────────────────────────── -->
+<section class="card">
+  <h2>Today – {{ today }}</h2>
+  {% if habits %}
+  <div class="habit-grid">
+    {% for h in habits %}
+    <form method="post" action="/habits/toggle" class="habit-tile {% if h.completed %}done{% endif %}">
+      <input type="hidden" name="habit_id" value="{{ h.id }}" />
+      <input type="hidden" name="log_date"  value="{{ today }}" />
+      <button type="submit" class="habit-btn">
+        <span class="habit-icon">{{ h.icon }}</span>
+        <span class="habit-name">{{ h.name }}</span>
+        <span class="habit-check">{% if h.completed %}✅{% else %}⬜{% endif %}</span>
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No habits yet. Add your first one below ↓</p>
+  {% endif %}
+</section>
+
+<!-- ── 7-DAY HISTORY ─────────────────────────────────── -->
+{% if habits %}
+<section class="card">
+  <h2>Last 7 Days</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Habit</th>
+          {% for d in last_7 %}
+          <th class="center">{{ d[5:] }}</th>
+          {% endfor %}
+          <th class="center">Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in habits %}
+        {% set h_history = history.get(h.id, {}) %}
+        {% set done = h_history.values() | selectattr('__eq__', 'equalto', true) | list | length %}
+        {% set eligible = last_7 | selectattr('__ge__', 'equalto', h.start_date) | list | length %}
+        <tr>
+          <td>{{ h.icon }} {{ h.name }}</td>
+          {% for d in last_7 %}
+          <td class="center">
+            {% if d < h.start_date %}
+              <span class="na">–</span>
+            {% elif h_history.get(d) %}✅
+            {% else %}⬜
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td class="center">
+            {% if eligible > 0 %}{{ (done / eligible * 100) | int }}%{% else %}–{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── ADD NEW HABIT ──────────────────────────────────── -->
+<section class="card">
+  <h2>Add a Habit</h2>
+  <form method="post" action="/habits/add" class="log-form">
+    <div class="form-row">
+      <label>Habit name</label>
+      <input type="text" name="name" placeholder="e.g. Walking, Meditation, Reading" required />
+    </div>
+    <div class="form-row">
+      <label>Category</label>
+      <select name="category">
+        <option value="fitness">🏋️ Fitness</option>
+        <option value="hygiene">🚿 Hygiene</option>
+        <option value="nutrition">🍳 Nutrition</option>
+        <option value="sleep">😴 Sleep</option>
+        <option value="mindset">🧘 Mindset</option>
+        <option value="other" selected>✅ Other</option>
+      </select>
+    </div>
+    <button type="submit" class="btn">Add Habit</button>
+  </form>
+</section>
+
+<!-- ── MANAGE ACTIVE HABITS ───────────────────────────── -->
+{% if habits %}
+<section class="card">
+  <h2>Manage Active Habits</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Habit</th><th>Category</th><th>Tracking since</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for h in habits %}
+      <tr>
+        <td>{{ h.icon }} {{ h.name }}</td>
+        <td>{{ h.category }}</td>
+        <td>{{ h.start_date }}</td>
+        <td>
+          <form method="post" action="/habits/deactivate/{{ h.id }}" style="display:inline">
+            <button class="btn-small btn-warn" onclick="return confirm('Pause \'{{ h.name }}\'? You can reactivate it later.')">Pause</button>
+          </form>
+          <form method="post" action="/habits/delete/{{ h.id }}" style="display:inline">
+            <button class="btn-delete" onclick="return confirm('Delete \'{{ h.name }}\' and all its history? This cannot be undone.')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<!-- ── INACTIVE / PAUSED HABITS ──────────────────────── -->
+{% if inactive %}
+<section class="card">
+  <h2>Paused Habits</h2>
+  <div class="table-scroll"><table>
+    <thead>
+      <tr><th>Habit</th><th>Category</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for h in inactive %}
+      <tr>
+        <td>{{ h.icon }} {{ h.name }}</td>
+        <td>{{ h.category }}</td>
+        <td>
+          <form method="post" action="/habits/reactivate/{{ h.id }}" style="display:inline">
+            <button class="btn-small">Reactivate</button>
+          </form>
+          <form method="post" action="/habits/delete/{{ h.id }}" style="display:inline">
+            <button class="btn-delete" onclick="return confirm('Delete \'{{ h.name }}\' permanently?')">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+{% endblock %}
